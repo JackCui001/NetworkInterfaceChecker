@@ -1,27 +1,28 @@
 package com.jackcui.networkinterfacechecker
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import java.net.NetworkInterface
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import com.jackcui.networkinterfacechecker.ui.theme.NetworkInterfaceCheckerTheme
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-    }
-
-    fun getNetworkInterfaceInfo(): MutableMap<String, String> {
-        val interfaceInfo = hashMapOf<String, String>()
-        NetworkInterface.getNetworkInterfaces()?.let {
-            while (it.hasMoreElements()) {
-                val curInterface = it.nextElement()
-                val curInfo =
-                    "Display name: ${curInterface.displayName}\nHardware address: ${curInterface.hardwareAddress}\nInternet addresses: ${
-                        curInterface.inetAddresses.toList().joinToString()
-                    }\nIs up: ${curInterface.isUp}\nIs loopback: ${curInterface.isLoopback}\nIs virtual: ${curInterface.isVirtual}\nIs p2p: ${curInterface.isPointToPoint}"
-                interfaceInfo[curInterface.displayName] = curInfo
+        setContent {
+            NetworkInterfaceCheckerTheme {
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Text("选择一个网络接口")
+                }
             }
         }
-        return interfaceInfo;
     }
 }
