@@ -1,5 +1,10 @@
 package com.jackcui.networkinterfacechecker
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.wifi.WifiManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -39,31 +44,61 @@ class MainActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
+}
 
-    private fun getNetworkInterfaceInfo(): MutableMap<String, String> {
-        val interfaceInfo = hashMapOf<String, String>()
-        NetworkInterface.getNetworkInterfaces()?.let { it ->
-            while (it.hasMoreElements()) {
-                val curInterface = it.nextElement()
-                val curInfo = StringBuilder()
-                val inetAddr = curInterface.inetAddresses
-                val inetAddrSB = StringBuilder()
-                while (inetAddr.hasMoreElements()) {
-                    val curAddr = inetAddr.nextElement()
-                    curAddr.hostAddress?.let {
-                        inetAddrSB.append("$it\n")
-                    }
-                }
-                curInfo.append(
-                    "Internet addresses:\n $inetAddrSB\n\n"
-                )
-                curInfo.append("Is up:\n ${curInterface.isUp}\n\n")
-                curInfo.append("Is loopback:\n ${curInterface.isLoopback}\n\n")
-                curInfo.append("Is virtual:\n ${curInterface.isVirtual}\n\n")
-                curInfo.append("Is p2p:\n ${curInterface.isPointToPoint}\n\n")
-                interfaceInfo[curInterface.displayName] = curInfo.toString()
+private fun getNetworkInterfaceInfo(): MutableMap<String, String> {
+    val interfaceInfo = hashMapOf<String, String>()
+    for (curInterface in NetworkInterface.getNetworkInterfaces()) {
+        val curInfo = StringBuilder()
+        val inetAddr = curInterface.inetAddresses
+        val inetAddrSB = StringBuilder()
+        curInterface.interfaceAddresses[0].broadcast
+        for (curAddr in inetAddr) {
+            curAddr.hostAddress?.let {
+                inetAddrSB.append("$it\n")
             }
         }
-        return interfaceInfo
+        if (inetAddrSB.toString().isNotBlank()) {
+            curInfo.append(
+                "Internet addresses:\n $inetAddrSB\n"
+            )
+        }
+        curInfo.append(
+            "MTU:\n ${curInterface.mtu}\n\n"
+        )
+        curInfo.append("Is up:\n ${curInterface.isUp}\n\n")
+        curInfo.append("Is loopback:\n ${curInterface.isLoopback}\n\n")
+        curInfo.append("Is virtual:\n ${curInterface.isVirtual}\n\n")
+        curInfo.append("Is p2p:\n ${curInterface.isPointToPoint}\n\n")
+        interfaceInfo[curInterface.displayName] = curInfo.toString()
     }
+    return interfaceInfo
 }
+
+//fun getGatewayAddress(context: Context): String? {
+//    val connectivityManager =
+//        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+//
+//    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//        val network = connectivityManager.activeNetwork
+//        val capabilities = connectivityManager.getNetworkCapabilities(network)
+//
+//        if ((capabilities != null) && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+//            val linkProperties = connectivityManager.getLinkProperties(network)
+//            val gateway = linkProperties?.routes?.filter { it.isDefaultRoute }
+//                ?.firstNotNullOfOrNull { it.gateway }
+//            return gateway?.hostAddress
+//        }
+//    } else {
+//        // For devices with lower Android versions
+//        val wifiManager =
+//            context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+//        val dhcpInfo = wifiManager.dhcpInfo
+//        return intToIp(dhcpInfo.gateway)
+//    }
+//    return null
+//}
+//
+//private fun intToIp(ip: Int): String {
+//    return "${ip and 0xFF}.${ip shr 8 and 0xFF}.${ip shr 16 and 0xFF}.${ip shr 24 and 0xFF}"
+//}
