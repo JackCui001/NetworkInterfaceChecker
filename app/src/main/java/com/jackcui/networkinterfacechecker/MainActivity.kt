@@ -1,18 +1,9 @@
 package com.jackcui.networkinterfacechecker
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.net.wifi.WifiManager
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
-import android.widget.AdapterView
-import android.widget.AdapterView.OnItemSelectedListener
-import android.widget.ArrayAdapter
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.jackcui.networkinterfacechecker.databinding.ActivityMainBinding
-import java.lang.StringBuilder
 import java.net.NetworkInterface
 
 class MainActivity : AppCompatActivity() {
@@ -23,25 +14,11 @@ class MainActivity : AppCompatActivity() {
         // ViewBinding
         vb = ActivityMainBinding.inflate(layoutInflater)
         setContentView(vb.root)
-
-        val keyList = info.keys.toList()
-        val adpt = ArrayAdapter(
-            this,
-            androidx.appcompat.R.layout.support_simple_spinner_dropdown_item,
-            keyList
-        )
-        vb.spnInterface.adapter = adpt
-        vb.spnInterface.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                vb.tvInfo.text = info[keyList[position]]
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        // Main Logic
+        val keyArr = info.keys.toTypedArray()
+        (vb.actvNetworkInterface as MaterialAutoCompleteTextView).setSimpleItems(keyArr)
+        vb.actvNetworkInterface.setOnItemClickListener { _, _, position, _ ->
+            vb.tvInfo.text = info[keyArr[position]]
         }
     }
 }
@@ -52,7 +29,6 @@ private fun getNetworkInterfaceInfo(): MutableMap<String, String> {
         val curInfo = StringBuilder()
         val inetAddr = curInterface.inetAddresses
         val inetAddrSB = StringBuilder()
-        curInterface.interfaceAddresses[0].broadcast
         for (curAddr in inetAddr) {
             curAddr.hostAddress?.let {
                 inetAddrSB.append("$it\n")
