@@ -8,73 +8,82 @@ import java.net.NetworkInterface
 
 class MainActivity : AppCompatActivity() {
     private lateinit var vb: ActivityMainBinding
-    private var info = getNetworkInterfaceInfo()
+    private lateinit var info: MutableMap<String, String>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // ViewBinding
+        // View binding
         vb = ActivityMainBinding.inflate(layoutInflater)
         setContentView(vb.root)
-        // Main Logic
+        updateInfo()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateInfo()
+    }
+
+    private fun updateInfo() {
+        info = getNetworkInterfaceInfo()
         val keyArr = info.keys.toTypedArray()
         (vb.actvNetworkInterface as MaterialAutoCompleteTextView).setSimpleItems(keyArr)
         vb.actvNetworkInterface.setOnItemClickListener { _, _, position, _ ->
             vb.tvInfo.text = info[keyArr[position]]
         }
     }
-}
 
-private fun getNetworkInterfaceInfo(): MutableMap<String, String> {
-    val interfaceInfo = hashMapOf<String, String>()
-    for (curInterface in NetworkInterface.getNetworkInterfaces()) {
-        val curInfo = StringBuilder()
-        val inetAddr = curInterface.inetAddresses
-        val inetAddrSB = StringBuilder()
-        for (curAddr in inetAddr) {
-            curAddr.hostAddress?.let {
-                inetAddrSB.append("$it\n")
+    private fun getNetworkInterfaceInfo(): MutableMap<String, String> {
+        val interfaceInfo = hashMapOf<String, String>()
+        for (curInterface in NetworkInterface.getNetworkInterfaces()) {
+            val curInfo = StringBuilder()
+            val inetAddr = curInterface.inetAddresses
+            val inetAddrSB = StringBuilder()
+            for (curAddr in inetAddr) {
+                curAddr.hostAddress?.let {
+                    inetAddrSB.appendLine(it)
+                }
             }
-        }
-        if (inetAddrSB.toString().isNotBlank()) {
-            curInfo.append(
-                "Internet addresses:\n $inetAddrSB\n"
+            if (inetAddrSB.toString().isNotBlank()) {
+                curInfo.appendLine(
+                    "网络地址：\n$inetAddrSB"
+                )
+            }
+            curInfo.appendLine(
+                "MTU：${curInterface.mtu}\n"
             )
+            curInfo.appendLine("已连接：${curInterface.isUp}\n")
+            curInfo.appendLine("回环地址：${curInterface.isLoopback}\n")
+            curInfo.appendLine("虚拟地址：${curInterface.isVirtual}\n")
+            curInfo.appendLine("P2P连接：${curInterface.isPointToPoint}\n")
+            interfaceInfo[curInterface.displayName] = curInfo.toString()
         }
-        curInfo.append(
-            "MTU:\n ${curInterface.mtu}\n\n"
-        )
-        curInfo.append("Is up:\n ${curInterface.isUp}\n\n")
-        curInfo.append("Is loopback:\n ${curInterface.isLoopback}\n\n")
-        curInfo.append("Is virtual:\n ${curInterface.isVirtual}\n\n")
-        curInfo.append("Is p2p:\n ${curInterface.isPointToPoint}\n\n")
-        interfaceInfo[curInterface.displayName] = curInfo.toString()
+        return interfaceInfo
     }
-    return interfaceInfo
-}
 
-//fun getGatewayAddress(context: Context): String? {
-//    val connectivityManager =
-//        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+//    fun getGatewayAddress(context: Context): String? {
+//        val connectivityManager =
+//            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 //
-//    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//        val network = connectivityManager.activeNetwork
-//        val capabilities = connectivityManager.getNetworkCapabilities(network)
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            val network = connectivityManager.activeNetwork
+//            val capabilities = connectivityManager.getNetworkCapabilities(network)
 //
-//        if ((capabilities != null) && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-//            val linkProperties = connectivityManager.getLinkProperties(network)
-//            val gateway = linkProperties?.routes?.filter { it.isDefaultRoute }
-//                ?.firstNotNullOfOrNull { it.gateway }
-//            return gateway?.hostAddress
+//            if ((capabilities != null) && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+//                val linkProperties = connectivityManager.getLinkProperties(network)
+//                val gateway = linkProperties?.routes?.filter { it.isDefaultRoute }
+//                    ?.firstNotNullOfOrNull { it.gateway }
+//                return gateway?.hostAddress
+//            }
+//        } else {
+//            // For devices with lower Android versions
+//            val wifiManager =
+//                context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+//            val dhcpInfo = wifiManager.dhcpInfo
+//            return intToIp(dhcpInfo.gateway)
 //        }
-//    } else {
-//        // For devices with lower Android versions
-//        val wifiManager =
-//            context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-//        val dhcpInfo = wifiManager.dhcpInfo
-//        return intToIp(dhcpInfo.gateway)
+//        return null
 //    }
-//    return null
-//}
 //
-//private fun intToIp(ip: Int): String {
-//    return "${ip and 0xFF}.${ip shr 8 and 0xFF}.${ip shr 16 and 0xFF}.${ip shr 24 and 0xFF}"
-//}
+//    private fun intToIp(ip: Int): String {
+//        return "${ip and 0xFF}.${ip shr 8 and 0xFF}.${ip shr 16 and 0xFF}.${ip shr 24 and 0xFF}"
+//    }
+}
